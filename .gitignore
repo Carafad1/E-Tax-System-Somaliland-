@@ -1,0 +1,44 @@
+# --- Backend (Python) ---
+backend/venv/
+backend/__pycache__/
+**/__pycache__/
+*.pyc
+backend/.env
+backend/instance/
+backend/logs/
+backend/*.db
+backend/.pytest_cache/
+backend/server_out.log
+backend/server_err.log
+backend/static/avatars/*
+!backend/static/avatars/.gitkeep
+
+# --- Mobile (Expo / React Native) ---
+mobile/node_modules/
+mobile/.expo/
+mobile/dist/
+mobile/web-build/
+mobile/.env
+mobile/*.jks
+mobile/*.p8
+mobile/*.p12
+mobile/*.key
+mobile/*.mobileprovision
+mobile/android/build/
+mobile/android/app/build/
+mobile/android/.gradle/
+mobile/android/**/build/
+mobile/ios/build/
+mobile/ios/Pods/
+*.apk
+*.aab
+
+# --- Editors / OS ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# --- Misc ---
+*.log
+npm-debug.log*

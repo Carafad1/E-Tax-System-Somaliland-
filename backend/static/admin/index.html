@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard | E-Tax System Somaliland</title>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- Dashboard Custom Styles -->
+  <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+
+  <div class="app-layout">
+    
+    <!-- LEFT SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      
+      <!-- Brand Header -->
+      <div class="sidebar-brand">
+        <div class="brand-logo">
+          <!-- Somaliland Emblem / Seal SVG -->
+          <svg width="40" height="40" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="50" cy="50" r="48" fill="#0D2137" stroke="#10B981" stroke-width="3"/>
+            <path d="M50 15 L58 35 L80 35 L62 48 L68 70 L50 56 L32 70 L38 48 L20 35 L42 35 Z" fill="#10B981"/>
+            <rect x="25" y="75" width="50" height="4" fill="#EF4444"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h2>E-TAX SYSTEM</h2>
+          <span>SOMALILAND</span>
+        </div>
+      </div>
+
+      <!-- Navigation Menu -->
+      <nav class="sidebar-nav">
+        <ul>
+          <li class="nav-item active">
+            <a href="#" onclick="switchTab('dashboard')">
+              <i class="fa-solid fa-chart-pie"></i>
+              <span>Dashboard</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" onclick="switchTab('taxpayers')">
+              <i class="fa-solid fa-users"></i>
+              <span>Taxpayers</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" onclick="switchTab('payments')">
+              <i class="fa-solid fa-credit-card"></i>
+              <span>Payments</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" onclick="switchTab('tax-types')">
+              <i class="fa-solid fa-receipt"></i>
+              <span>Tax Types</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" onclick="switchTab('payment-methods')">
+              <i class="fa-solid fa-wallet"></i>
+              <span>Payment Methods</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" onclick="switchTab('cities')">
+              <i class="fa-solid fa-city"></i>
+              <span>Cities Ranking</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" onclick="switchTab('currency')">
+              <i class="fa-solid fa-coins"></i>
+              <span>Currency</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" onclick="switchTab('reports')">
+              <i class="fa-solid fa-file-invoice-dollar"></i>
+              <span>Reports</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" onclick="switchTab('receipts')">
+              <i class="fa-solid fa-file-shield"></i>
+              <span>Receipts</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" onclick="switchTab('notifications')">
+              <i class="fa-solid fa-bell"></i>
+              <span>Notifications</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" onclick="switchTab('settings')">
+              <i class="fa-solid fa-sliders"></i>
+              <span>Settings</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" onclick="switchTab('users-roles')">
+              <i class="fa-solid fa-user-shield"></i>
+              <span>Users & Roles</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" onclick="switchTab('activity-log')">
+              <i class="fa-solid fa-clock-rotate-left"></i>
+              <span>Activity Log</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" onclick="switchTab('backup-restore')">
+              <i class="fa-solid fa-database"></i>
+              <span>Backup & Restore</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- System Info Widget -->
+      <div class="system-info-box">
+        <div class="sys-info-title">SYSTEM INFO</div>
+        <div class="sys-info-row">
+          <span>Total Users</span>
+          <strong id="sys-users-val">0</strong>
+        </div>
+        <div class="sys-info-row">
+          <span>Total Payments</span>
+          <strong id="sys-payments-val">0</strong>
+        </div>
+        <div class="sys-info-row">
+          <span>Database Status</span>
+          <span class="status-indicator online" id="db-status-badge">
+            <i class="dot"></i> <span id="db-status-text">Connected</span>
+          </span>
+        </div>
+        <div class="sys-info-row">
+          <span>Last Backup</span>
+          <strong id="sys-backup-val">Today</strong>
+        </div>
+      </div>
+
+      <!-- Admin User Card -->
+      <div class="admin-user-card">
+        <img src="https://ui-avatars.com/api/?name=Admin+User&background=0284C7&color=fff&bold=true" alt="Admin Avatar" class="admin-avatar">
+        <div class="admin-user-details">
+          <div class="admin-name">Admin User</div>
+          <div class="admin-role">Super Administrator</div>
+        </div>
+        <button class="logout-btn" title="Logout" onclick="logoutAdmin()">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i>
+        </button>
+      </div>
+
+    </aside>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="main-content">
+      
+      <!-- TOP HEADER -->
+      <header class="top-header">
+        <div class="header-left">
+          <button class="hamburger-btn" id="hamburger-toggle" onclick="toggleSidebar()">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+          <div>
+            <h1 class="page-title">Dashboard</h1>
+            <p class="page-subtitle">Welcome back, Admin</p>
+          </div>
+        </div>
+
+        <div class="header-right">
+          <!-- Date Range Selector -->
+          <div class="date-range-picker" onclick="openDateModal()">
+            <i class="fa-regular fa-calendar-days"></i>
+            <span id="date-range-display">May 28, 2026 – Jun 28, 2026</span>
+            <i class="fa-solid fa-chevron-down arrow"></i>
+          </div>
+
+          <!-- Refresh Button -->
+          <button class="icon-btn refresh-btn" onclick="fetchDashboardData()" title="Refresh Data">
+            <i class="fa-solid fa-rotate-right" id="refresh-icon"></i>
+          </button>
+
+          <!-- Notification Bell -->
+          <div class="notification-wrapper" onclick="toggleNotificationsModal()">
+            <button class="icon-btn">
+              <i class="fa-regular fa-bell"></i>
+              <span class="badge" id="notif-badge">3</span>
+            </button>
+          </div>
+
+          <!-- Admin Avatar Dropdown -->
+          <div class="header-profile">
+            <img src="https://ui-avatars.com/api/?name=Admin+User&background=0284C7&color=fff&bold=true" alt="Profile Avatar" class="header-avatar">
+          </div>
+        </div>
+      </header>
+
+      <!-- DASHBOARD BODY CONTAINER -->
+      <div class="dashboard-body" id="dashboard-body">
+
+        <!-- Error Alert Bar (Hidden by Default) -->
+        <div class="alert-banner" id="error-banner" style="display: none;">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          <span id="error-banner-text">Unable to load dashboard data. Please check your connection.</span>
+          <button class="close-alert" onclick="hideErrorBanner()">&times;</button>
+        </div>
+
+        <!-- 1. SUMMARY STATISTIC CARDS (4 CARDS) -->
+        <div class="stats-grid">
+          
+          <!-- CARD 1: Total Revenue SLSH -->
+          <div class="stat-card">
+            <div class="stat-icon slsh-bg">
+              <i class="fa-solid fa-wallet"></i>
+            </div>
+            <div class="stat-details">
+              <span class="stat-label">Total Revenue (SLSH)</span>
+              <h3 class="stat-value" id="stat-revenue-slsh">0 SLSH</h3>
+              <div class="stat-change positive" id="stat-revenue-slsh-change">
+                <i class="fa-solid fa-arrow-trend-up"></i> <span>+0%</span> <small>from last period</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- CARD 2: Total Revenue USD -->
+          <div class="stat-card">
+            <div class="stat-icon usd-bg">
+              <i class="fa-solid fa-dollar-sign"></i>
+            </div>
+            <div class="stat-details">
+              <span class="stat-label">Total Revenue (USD)</span>
+              <h3 class="stat-value" id="stat-revenue-usd">$0</h3>
+              <div class="stat-change positive" id="stat-revenue-usd-change">
+                <i class="fa-solid fa-arrow-trend-up"></i> <span>+0%</span> <small>from last period</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- CARD 3: Total Taxpayers -->
+          <div class="stat-card">
+            <div class="stat-icon taxpayers-bg">
+              <i class="fa-solid fa-users"></i>
+            </div>
+            <div class="stat-details">
+              <span class="stat-label">Total Taxpayers</span>
+              <h3 class="stat-value" id="stat-taxpayers">0</h3>
+              <div class="stat-change positive" id="stat-taxpayers-change">
+                <i class="fa-solid fa-user-plus"></i> <span>+0%</span> <small>from last period</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- CARD 4: Total Payments -->
+          <div class="stat-card">
+            <div class="stat-icon payments-bg">
+              <i class="fa-solid fa-receipt"></i>
+            </div>
+            <div class="stat-details">
+              <span class="stat-label">Total Payments</span>
+              <h3 class="stat-value" id="stat-payments">0</h3>
+              <div class="stat-change positive" id="stat-payments-change">
+                <i class="fa-solid fa-check-circle"></i> <span>+0%</span> <small>from last period</small>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- SECTION: CITIES RANKING & PAYMENT METHODS -->
+        <div class="grid-layout-2-1">
+          
+          <!-- TOP CITIES BY TAX REVENUE CARD -->
+          <div class="card-box">
+            <div class="card-header">
+              <h3 class="card-title"><i class="fa-solid fa-city icon-navy"></i> TOP CITIES BY TAX REVENUE</h3>
+              <a href="#" class="card-link" onclick="switchTab('cities')">View All</a>
+            </div>
+            <div class="cities-list" id="cities-container">
+              <!-- Dynamically Populated from Database -->
+              <div class="loading-spinner"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading cities...</div>
+            </div>
+          </div>
+
+          <!-- PAYMENT METHODS DONUT CHART CARD -->
+          <div class="card-box">
+            <div class="card-header">
+              <h3 class="card-title"><i class="fa-solid fa-chart-pie icon-blue"></i> PAYMENT METHODS</h3>
+              <a href="#" class="card-link" onclick="switchTab('reports')">View Report</a>
+            </div>
+            <div class="chart-wrapper">
+              <canvas id="paymentMethodsChart"></canvas>
+            </div>
+            <div class="methods-legend" id="payment-methods-legend">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+
+        </div>
+
+        <!-- SECTION: CURRENCY BREAKDOWN & TAX TYPES PERFORMANCE -->
+        <div class="grid-layout-1-2">
+          
+          <!-- CURRENCY BREAKDOWN CARD -->
+          <div class="card-box">
+            <div class="card-header">
+              <h3 class="card-title"><i class="fa-solid fa-coins icon-gold"></i> CURRENCY BREAKDOWN</h3>
+            </div>
+            <div class="currency-flex-container">
+              <!-- Left: SLSH -->
+              <div class="currency-meter-box">
+                <div class="meter-circle slsh-circle">
+                  <span class="meter-pct" id="slsh-pct">80.6%</span>
+                  <span class="meter-lbl">SLSH</span>
+                </div>
+                <div class="meter-value" id="slsh-total-val">0</div>
+                <div class="meter-sub">Total Revenue (SLSH)</div>
+              </div>
+              <!-- Right: USD -->
+              <div class="currency-meter-box">
+                <div class="meter-circle usd-circle">
+                  <span class="meter-pct" id="usd-pct">19.4%</span>
+                  <span class="meter-lbl">USD</span>
+                </div>
+                <div class="meter-value" id="usd-total-val">$0</div>
+                <div class="meter-sub">Total Revenue (USD)</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAX TYPES PERFORMANCE CARD -->
+          <div class="card-box">
+            <div class="card-header">
+              <h3 class="card-title"><i class="fa-solid fa-layer-group icon-purple"></i> TAX TYPES PERFORMANCE</h3>
+              <a href="#" class="card-link" onclick="switchTab('tax-types')">View Report</a>
+            </div>
+            <div class="tax-types-grid" id="tax-types-container">
+              <!-- Dynamically Populated (Daily, 6-Month, Yearly) -->
+              <div class="loading-spinner"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading tax types...</div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- SECTION: REVENUE OVER TIME & PAYMENT STATUS -->
+        <div class="grid-layout-2-1">
+          
+          <!-- REVENUE OVER TIME GRAPH CARD -->
+          <div class="card-box">
+            <div class="card-header">
+              <h3 class="card-title"><i class="fa-solid fa-chart-line icon-green"></i> REVENUE OVER TIME</h3>
+              <div class="dropdown-filter">
+                <select id="revenue-period-select" onchange="loadRevenueChart(this.value)">
+                  <option value="monthly" selected>Monthly</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="daily">Daily</option>
+                  <option value="yearly">Yearly</option>
+                </select>
+              </div>
+            </div>
+            <div class="chart-wrapper-lg">
+              <canvas id="revenueTrendChart"></canvas>
+            </div>
+          </div>
+
+          <!-- PAYMENT STATUS DONUT CHART CARD -->
+          <div class="card-box">
+            <div class="card-header">
+              <h3 class="card-title"><i class="fa-solid fa-chart-donut icon-orange"></i> PAYMENT STATUS</h3>
+              <a href="#" class="card-link" onclick="switchTab('payments')">View All</a>
+            </div>
+            <div class="chart-wrapper">
+              <canvas id="paymentStatusChart"></canvas>
+            </div>
+            <div class="status-breakdown-list" id="status-breakdown-list">
+              <!-- Dynamic -->
+            </div>
+          </div>
+
+        </div>
+
+        <!-- RECENT TAXPAYERS TABLE CARD -->
+        <div class="card-box full-width">
+          <div class="card-header">
+            <h3 class="card-title"><i class="fa-solid fa-user-check icon-navy"></i> RECENT TAXPAYERS</h3>
+            <a href="#" class="card-link" onclick="switchTab('taxpayers')">View All Taxpayers</a>
+          </div>
+          <div class="table-responsive">
+            <table class="data-table" id="recent-taxpayers-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Name</th>
+                  <th>TIN Number</th>
+                  <th>Phone</th>
+                  <th>City</th>
+                  <th>Tax Type</th>
+                  <th>Total Paid</th>
+                  <th>Status</th>
+                  <th>Registered Date</th>
+                </tr>
+              </thead>
+              <tbody id="taxpayers-tbody">
+                <tr>
+                  <td colspan="9" class="text-center py-4">
+                    <i class="fa-solid fa-circle-notch fa-spin"></i> Loading recent taxpayers...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- FOOTER -->
+      <footer class="app-footer">
+        <p>&copy; 2026 E-TAX SYSTEM SOMALILAND. All rights reserved.</p>
+      </footer>
+
+    </main>
+  </div>
+
+  <!-- Dashboard Custom JavaScript -->
+  <script src="js/dashboard.js"></script>
+</body>
+</html>

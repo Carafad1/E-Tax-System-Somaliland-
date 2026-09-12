@@ -1,0 +1,912 @@
+/* ==========================================================================
+   E-TAX SYSTEM SOMALILAND — ADMIN DASHBOARD STYLES
+   Government Style Enterprise Theme
+   ========================================================================== */
+
+:root {
+  /* Colors */
+  --bg-sidebar: #0A192F;
+  --bg-sidebar-active: #1E3A8A;
+  --bg-body: #F8FAFC;
+  --bg-card: #FFFFFF;
+  
+  --text-primary: #0F172A;
+  --text-secondary: #64748B;
+  --text-muted: #94A3B8;
+  --text-white: #FFFFFF;
+  
+  --color-blue: #0284C7;
+  --color-blue-dark: #1E40AF;
+  --color-green: #10B981;
+  --color-purple: #8B5CF6;
+  --color-orange: #F97316;
+  --color-red: #EF4444;
+  --color-gold: #F59E0B;
+
+  --border-light: #E2E8F0;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.06), 0 2px 4px -1px rgba(0,0,0,0.04);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+body {
+  background-color: var(--bg-body);
+  color: var(--text-primary);
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+
+/* App Layout */
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ==========================================================================
+   1. LEFT SIDEBAR
+   ========================================================================== */
+
+.sidebar {
+  width: 270px;
+  background-color: var(--bg-sidebar);
+  color: var(--text-white);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1000;
+  transition: transform 0.3s ease;
+  overflow-y: auto;
+}
+
+.sidebar::-webkit-scrollbar {
+  width: 4px;
+}
+.sidebar::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.1);
+  border-radius: 4px;
+}
+
+/* Brand Header */
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.brand-text h2 {
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: #FFFFFF;
+  line-height: 1.1;
+}
+
+.brand-text span {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-green);
+  letter-spacing: 1.5px;
+}
+
+/* Navigation Menu */
+.sidebar-nav {
+  padding: 16px 12px;
+  flex: 1;
+}
+
+.sidebar-nav ul {
+  list-style: none;
+}
+
+.nav-item {
+  margin-bottom: 4px;
+}
+
+.nav-item a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  color: #94A3B8;
+  text-decoration: none;
+  font-size: 0.88rem;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+}
+
+.nav-item a i {
+  font-size: 1.05rem;
+  width: 20px;
+  text-align: center;
+}
+
+.nav-item a:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+  color: #FFFFFF;
+}
+
+.nav-item.active a {
+  background-color: var(--color-blue);
+  color: #FFFFFF;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+}
+
+/* System Info Widget */
+.system-info-box {
+  margin: 16px 14px;
+  padding: 14px;
+  background-color: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  font-size: 0.78rem;
+}
+
+.sys-info-title {
+  font-weight: 700;
+  color: #64748B;
+  letter-spacing: 1px;
+  font-size: 0.68rem;
+  margin-bottom: 8px;
+}
+
+.sys-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  color: #CBD5E1;
+}
+
+.sys-info-row strong {
+  color: #FFFFFF;
+}
+
+.status-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.72rem;
+}
+
+.status-indicator.online {
+  background-color: rgba(16, 185, 129, 0.15);
+  color: #10B981;
+}
+
+.status-indicator .dot {
+  width: 6px;
+  height: 6px;
+  background-color: #10B981;
+  border-radius: 50%;
+  box-shadow: 0 0 6px #10B981;
+}
+
+/* Admin User Card */
+.admin-user-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px;
+  margin: 0 14px 16px 14px;
+  background-color: rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-md);
+}
+
+.admin-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.admin-user-details {
+  flex: 1;
+  overflow: hidden;
+}
+
+.admin-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #FFFFFF;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.admin-role {
+  font-size: 0.7rem;
+  color: var(--color-green);
+  font-weight: 500;
+}
+
+.logout-btn {
+  background: none;
+  border: none;
+  color: #94A3B8;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 4px;
+  transition: color 0.2s;
+}
+
+.logout-btn:hover {
+  color: var(--color-red);
+}
+
+/* ==========================================================================
+   2. MAIN CONTENT & TOP HEADER
+   ========================================================================== */
+
+.main-content {
+  margin-left: 270px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  transition: margin-left 0.3s ease;
+}
+
+.top-header {
+  height: 72px;
+  background-color: var(--bg-card);
+  border-bottom: 1px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  position: sticky;
+  top: 0;
+  z-index: 900;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.hamburger-btn {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.page-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.page-subtitle {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* Date Range Picker */
+.date-range-picker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background-color: #F1F5F9;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.date-range-picker:hover {
+  border-color: var(--color-blue);
+}
+
+.date-range-picker i {
+  color: var(--color-blue);
+}
+
+.date-range-picker .arrow {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+}
+
+/* Icon Buttons */
+.icon-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background-color: #F1F5F9;
+  border: 1px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s;
+}
+
+.icon-btn:hover {
+  background-color: #E2E8F0;
+  color: var(--text-primary);
+}
+
+.icon-btn .badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  background-color: var(--color-red);
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 700;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 2px solid var(--color-blue);
+}
+
+/* ==========================================================================
+   3. DASHBOARD BODY & STAT CARDS
+   ========================================================================== */
+
+.dashboard-body {
+  padding: 28px;
+  flex: 1;
+}
+
+.alert-banner {
+  background-color: #FEF2F2;
+  border: 1px solid #FCA5A5;
+  color: #991B1B;
+  padding: 12px 18px;
+  border-radius: var(--radius-md);
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+
+.close-alert {
+  margin-left: auto;
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: #991B1B;
+}
+
+/* Grid Layouts */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.stat-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.slsh-bg { background-color: rgba(16, 185, 129, 0.12); color: var(--color-green); }
+.usd-bg { background-color: rgba(2, 132, 199, 0.12); color: var(--color-blue); }
+.taxpayers-bg { background-color: rgba(139, 92, 246, 0.12); color: var(--color-purple); }
+.payments-bg { background-color: rgba(249, 115, 22, 0.12); color: var(--color-orange); }
+
+.stat-details {
+  flex: 1;
+}
+
+.stat-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.stat-value {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1.2;
+  margin-bottom: 6px;
+}
+
+.stat-change {
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.stat-change.positive { color: var(--color-green); }
+.stat-change.negative { color: var(--color-red); }
+.stat-change small { color: var(--text-muted); font-weight: 400; margin-left: 2px; }
+
+/* Grid Sections */
+.grid-layout-2-1 {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.grid-layout-1-2 {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.card-box {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+}
+
+.card-box.full-width {
+  width: 100%;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.card-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-title i {
+  font-size: 1.1rem;
+}
+
+.icon-navy { color: #0F172A; }
+.icon-blue { color: var(--color-blue); }
+.icon-gold { color: var(--color-gold); }
+.icon-purple { color: var(--color-purple); }
+.icon-green { color: var(--color-green); }
+.icon-orange { color: var(--color-orange); }
+
+.card-link {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-blue);
+  text-decoration: none;
+}
+
+.card-link:hover {
+  text-decoration: underline;
+}
+
+/* ==========================================================================
+   4. TOP CITIES BY TAX REVENUE
+   ========================================================================== */
+
+.cities-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.city-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.city-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+}
+
+.city-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.city-rank {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.city-revenue {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.city-pct-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-blue);
+  background-color: rgba(2, 132, 199, 0.1);
+  padding: 1px 6px;
+  border-radius: 4px;
+  margin-left: 6px;
+}
+
+.progress-bar-bg {
+  width: 100%;
+  height: 7px;
+  background-color: #E2E8F0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-blue) 0%, var(--color-green) 100%);
+  border-radius: 4px;
+  transition: width 0.6s ease;
+}
+
+/* ==========================================================================
+   5. CHARTS & CURRENCY BREAKDOWN
+   ========================================================================== */
+
+.chart-wrapper {
+  position: relative;
+  height: 220px;
+  width: 100%;
+}
+
+.chart-wrapper-lg {
+  position: relative;
+  height: 280px;
+  width: 100%;
+}
+
+.methods-legend {
+  margin-top: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+/* Currency Breakdown Meter */
+.currency-flex-container {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 16px 0;
+  gap: 16px;
+}
+
+.currency-meter-box {
+  text-align: center;
+}
+
+.meter-circle {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px auto;
+  position: relative;
+}
+
+.slsh-circle {
+  border: 7px solid var(--color-green);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.2);
+}
+
+.usd-circle {
+  border: 7px solid var(--color-blue);
+  box-shadow: 0 0 12px rgba(2, 132, 199, 0.2);
+}
+
+.meter-pct {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.meter-lbl {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.meter-value {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.meter-sub {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+
+/* Tax Types Performance Grid */
+.tax-types-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.tax-type-card {
+  background-color: #F8FAFC;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+}
+
+.tax-type-name {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.tax-type-revenue {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--color-blue-dark);
+  margin-bottom: 2px;
+}
+
+.tax-type-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.tax-type-meta strong {
+  color: var(--color-green);
+}
+
+/* Dropdown filter */
+.dropdown-filter select {
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-light);
+  background-color: #F1F5F9;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+/* Status Breakdown List */
+.status-breakdown-list {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.status-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.82rem;
+  padding: 6px 10px;
+  border-radius: 4px;
+  background-color: #F8FAFC;
+}
+
+.status-label-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.dot-completed { background-color: var(--color-green); }
+.dot-pending { background-color: var(--color-orange); }
+.dot-rejected { background-color: var(--color-red); }
+
+/* ==========================================================================
+   6. TABLES & FOOTER
+   ========================================================================== */
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.82rem;
+}
+
+.data-table th {
+  background-color: #F1F5F9;
+  color: var(--text-secondary);
+  font-weight: 700;
+  padding: 12px 14px;
+  border-bottom: 2px solid var(--border-light);
+  white-space: nowrap;
+}
+
+.data-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.data-table tbody tr:hover {
+  background-color: #F8FAFC;
+}
+
+.badge-status {
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  display: inline-block;
+}
+
+.badge-status.active {
+  background-color: rgba(16, 185, 129, 0.15);
+  color: #10B981;
+}
+
+.badge-status.pending {
+  background-color: rgba(249, 115, 22, 0.15);
+  color: #F97316;
+}
+
+/* Footer */
+.app-footer {
+  padding: 20px 28px;
+  background-color: var(--bg-card);
+  border-top: 1px solid var(--border-light);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.loading-spinner {
+  text-align: center;
+  padding: 20px;
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+}
+
+/* Responsive Media Queries */
+@media (max-width: 1024px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .grid-layout-2-1,
+  .grid-layout-1-2 {
+    grid-template-columns: 1fr;
+  }
+  .tax-types-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-100%);
+  }
+  .sidebar.open {
+    transform: translateX(0);
+  }
+  .main-content {
+    margin-left: 0;
+  }
+  .hamburger-btn {
+    display: block;
+  }
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  .top-header {
+    padding: 0 16px;
+  }
+  .dashboard-body {
+    padding: 16px;
+  }
+  .date-range-picker span {
+    display: none;
+  }
+}

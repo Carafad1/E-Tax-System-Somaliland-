@@ -1,0 +1,14 @@
+venv/
+__pycache__/
+**/__pycache__/
+*.pyc
+.env
+.pytest_cache/
+instance/
+*.db
+server_out.log
+server_err.log
+static/etax-somaliland.apk
+static/avatars/*
+!static/avatars/.gitkeep
+tests/
