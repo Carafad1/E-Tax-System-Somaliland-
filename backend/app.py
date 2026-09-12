@@ -113,4 +113,9 @@ app = create_app()
 
 if __name__ == "__main__":
     logger.info("Starting E-Tax System Somaliland API on 0.0.0.0:5000")
-    app.run(host="0.0.0.0", port=5000, debug=app.config["DEBUG"])
+    # threaded=True: the mobile dashboard fires several requests concurrently
+    # (Promise.all) - the dev server's default single-threaded handling would
+    # otherwise queue them behind each other. Gunicorn (production, see
+    # Procfile) already handles concurrency via its own worker processes, so
+    # this only affects local `python app.py` runs.
+    app.run(host="0.0.0.0", port=5000, debug=app.config["DEBUG"], threaded=True)

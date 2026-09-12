@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import case, func
+from sqlalchemy import and_, case, func
+from sqlalchemy.orm import joinedload
 
 from extensions import db
 from models import CURRENCIES, City, Payment, TaxType, User
@@ -198,20 +199,40 @@ def recent_taxpayers(limit=5):
         .limit(limit)
         .all()
     )
+    if not taxpayers:
+        return []
+
+    user_ids = [user.id for user in taxpayers]
+
+    # Total SLSH paid per user, batched into one query (was one query per
+    # user - each round-trip carries real network latency in production).
+    totals_by_user = dict(
+        db.session.query(Payment.user_id, func.coalesce(func.sum(Payment.amount), 0))
+        .filter(
+            Payment.user_id.in_(user_ids),
+            Payment.status == "completed",
+            Payment.currency == "SLSH",
+        )
+        .group_by(Payment.user_id)
+        .all()
+    )
+
+    # Latest payment per user (for its tax type), fetched in one query and
+    # reduced in Python - was also one query per user.
+    latest_payment_by_user = {}
+    payments = (
+        Payment.query.options(joinedload(Payment.tax_type))
+        .filter(Payment.user_id.in_(user_ids))
+        .order_by(Payment.user_id, Payment.created_at.desc())
+        .all()
+    )
+    for payment in payments:
+        latest_payment_by_user.setdefault(payment.user_id, payment)
+
     result = []
     for index, user in enumerate(taxpayers, start=1):
-        # Calculate total paid in SLSH
-        total_paid_slsh = (
-            db.session.query(func.coalesce(func.sum(Payment.amount), 0))
-            .filter(Payment.user_id == user.id, Payment.status == "completed", Payment.currency == "SLSH")
-            .scalar()
-        )
-        # Find latest payment tax type
-        latest_payment = (
-            Payment.query.filter_by(user_id=user.id)
-            .order_by(Payment.created_at.desc())
-            .first()
-        )
+        total_paid_slsh = float(totals_by_user.get(user.id, 0) or 0)
+        latest_payment = latest_payment_by_user.get(user.id)
         tax_type_name = latest_payment.tax_type.name if (latest_payment and latest_payment.tax_type) else None
 
         reg_date = user.created_at.strftime("%d %b %Y") if user.created_at else "N/A"
@@ -224,8 +245,8 @@ def recent_taxpayers(limit=5):
             "city": user.city.name if user.city else None,
             "avatar_url": user.avatar_url,
             "tax_type": tax_type_name,
-            "total_paid_slsh": float(total_paid_slsh or 0),
-            "total_paid_formatted": f"{float(total_paid_slsh or 0):,.0f} SLSH",
+            "total_paid_slsh": total_paid_slsh,
+            "total_paid_formatted": f"{total_paid_slsh:,.0f} SLSH",
             "status": user.status.title() if user.status else "Active",
             "registered_date": reg_date,
         })
@@ -237,49 +258,86 @@ def overview():
     period_start = now - timedelta(days=30)
     prior_start = now - timedelta(days=60)
 
-    revenue_slsh = _revenue_for_currency("SLSH")
-    revenue_usd = _revenue_for_currency("USD")
-
-    revenue_slsh_period = _revenue_for_currency("SLSH", since=period_start)
-    revenue_slsh_prior = (
-        db.session.query(func.coalesce(func.sum(Payment.amount), 0))
-        .filter(
-            Payment.status == "completed",
-            Payment.currency == "SLSH",
-            Payment.payment_date >= prior_start,
-            Payment.payment_date < period_start,
+    # --- Revenue (all-time + this/prior 30-day period, both currencies) -
+    # one round-trip instead of six. Each query has real network latency in
+    # production, so collapsing them matters far more than it would locally.
+    revenue_row = (
+        db.session.query(
+            func.coalesce(func.sum(case((Payment.currency == "SLSH", Payment.amount), else_=0)), 0),
+            func.coalesce(func.sum(case((Payment.currency == "USD", Payment.amount), else_=0)), 0),
+            func.coalesce(
+                func.sum(case((and_(Payment.currency == "SLSH", Payment.payment_date >= period_start), Payment.amount), else_=0)),
+                0,
+            ),
+            func.coalesce(
+                func.sum(case((and_(
+                    Payment.currency == "SLSH",
+                    Payment.payment_date >= prior_start,
+                    Payment.payment_date < period_start,
+                ), Payment.amount), else_=0)),
+                0,
+            ),
+            func.coalesce(
+                func.sum(case((and_(Payment.currency == "USD", Payment.payment_date >= period_start), Payment.amount), else_=0)),
+                0,
+            ),
+            func.coalesce(
+                func.sum(case((and_(
+                    Payment.currency == "USD",
+                    Payment.payment_date >= prior_start,
+                    Payment.payment_date < period_start,
+                ), Payment.amount), else_=0)),
+                0,
+            ),
         )
-        .scalar()
+        .filter(Payment.status == "completed")
+        .one()
     )
-    revenue_usd_period = _revenue_for_currency("USD", since=period_start)
-    revenue_usd_prior = (
-        db.session.query(func.coalesce(func.sum(Payment.amount), 0))
-        .filter(
-            Payment.status == "completed",
-            Payment.currency == "USD",
-            Payment.payment_date >= prior_start,
-            Payment.payment_date < period_start,
+    (
+        revenue_slsh, revenue_usd,
+        revenue_slsh_period, revenue_slsh_prior,
+        revenue_usd_period, revenue_usd_prior,
+    ) = (float(value) for value in revenue_row)
+
+    # --- Payment counts (all-time, this/prior period, by status) - one
+    # round-trip instead of six.
+    payment_row = (
+        db.session.query(
+            func.count(Payment.id),
+            func.sum(case((Payment.created_at >= period_start, 1), else_=0)),
+            func.sum(case((and_(Payment.created_at >= prior_start, Payment.created_at < period_start), 1), else_=0)),
+            func.sum(case((Payment.status == "completed", 1), else_=0)),
+            func.sum(case((Payment.status.in_(["pending", "processing"]), 1), else_=0)),
+            func.sum(case((Payment.status.in_(["failed", "cancelled"]), 1), else_=0)),
         )
-        .scalar()
+        .one()
     )
-
-    payments_period = Payment.query.filter(Payment.created_at >= period_start).count()
-    payments_prior = Payment.query.filter(
-        Payment.created_at >= prior_start, Payment.created_at < period_start
-    ).count()
-
-    taxpayers_period = User.query.filter_by(role="citizen").filter(User.created_at >= period_start).count()
-    taxpayers_prior = User.query.filter_by(role="citizen").filter(
-        User.created_at >= prior_start, User.created_at < period_start
-    ).count()
-
-    total_payments = Payment.query.count()
-    total_taxpayers = User.query.filter_by(role="citizen").count()
-    total_users = User.query.count()
-    completed = Payment.query.filter_by(status="completed").count()
-    pending = Payment.query.filter(Payment.status.in_(["pending", "processing"])).count()
-    failed = Payment.query.filter(Payment.status.in_(["failed", "cancelled"])).count()
+    total_payments = payment_row[0]
+    payments_period = int(payment_row[1] or 0)
+    payments_prior = int(payment_row[2] or 0)
+    completed = int(payment_row[3] or 0)
+    pending = int(payment_row[4] or 0)
+    failed = int(payment_row[5] or 0)
     total_receipts = Payment.query.filter(Payment.receipt.has()).count()
+
+    # --- Taxpayer/user counts - one round-trip instead of four.
+    user_row = (
+        db.session.query(
+            func.sum(case((User.role == "citizen", 1), else_=0)),
+            func.sum(case((and_(User.role == "citizen", User.created_at >= period_start), 1), else_=0)),
+            func.sum(case((and_(
+                User.role == "citizen",
+                User.created_at >= prior_start,
+                User.created_at < period_start,
+            ), 1), else_=0)),
+            func.count(User.id),
+        )
+        .one()
+    )
+    total_taxpayers = int(user_row[0] or 0)
+    taxpayers_period = int(user_row[1] or 0)
+    taxpayers_prior = int(user_row[2] or 0)
+    total_users = int(user_row[3] or 0)
 
     payment_methods = payment_method_breakdown()
     cities_by_slsh = revenue_by_city()
@@ -313,12 +371,26 @@ def overview():
     status_total = completed + pending + failed
     status_total_calc = status_total or 1
 
+    # Same totals payment_method_breakdown's sibling revenue_by_currency()
+    # would compute standalone - derived here from revenue_row instead of a
+    # seventh query, since revenue_slsh/revenue_usd already have them.
+    currency_totals = {"SLSH": revenue_slsh, "USD": revenue_usd}
+    currency_grand_total = sum(currency_totals.values()) or 1
+    revenue_by_currency_data = [
+        {
+            "currency": currency,
+            "total": currency_totals.get(currency, 0.0),
+            "percentage": round((currency_totals.get(currency, 0.0) / currency_grand_total) * 100, 1),
+        }
+        for currency in CURRENCIES
+    ]
+
     return {
         "stat_cards": {
             "total_revenue_slsh": revenue_slsh,
-            "total_revenue_slsh_change": _percent_change(revenue_slsh_period, float(revenue_slsh_prior or 0)),
+            "total_revenue_slsh_change": _percent_change(revenue_slsh_period, revenue_slsh_prior),
             "total_revenue_usd": revenue_usd,
-            "total_revenue_usd_change": _percent_change(revenue_usd_period, float(revenue_usd_prior or 0)),
+            "total_revenue_usd_change": _percent_change(revenue_usd_period, revenue_usd_prior),
             "total_payments": total_payments,
             "total_payments_change": _percent_change(payments_period, payments_prior),
             "total_taxpayers": total_taxpayers,
@@ -338,7 +410,7 @@ def overview():
             "total_receipts": total_receipts,
         },
         "payment_methods": payment_methods,
-        "revenue_by_currency": revenue_by_currency(),
+        "revenue_by_currency": revenue_by_currency_data,
         "tax_type_ranking": tax_type_ranking(),
         "cities": cities_by_slsh,
         "revenue_trend_monthly": revenue_trend_monthly,
