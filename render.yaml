@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: etax-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: "FLASK_SKIP_DB_INIT=1 flask db upgrade && gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --timeout 60"
+    healthCheckPath: /api/health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: DB_SSL_CA_PATH
+        value: certs/aiven-ca.pem
+      - key: SECRET_KEY
+        generateValue: true
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: ADMIN_USERNAME
+        value: admin
+      - key: ADMIN_PASSWORD
+        value: "1234"
+      - key: FLASK_ENV
+        value: production

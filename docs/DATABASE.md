@@ -66,7 +66,7 @@ rather than relying on the demo cascade behavior as-is.
 
 ## Money
 
-`amount` and `min_amount` are `DECIMAL(14,2)` (`Numeric` in SQLAlchemy) — never floating point —
+`amount`, `min_amount_slsh`, and `min_amount_usd` are `DECIMAL(14,2)` (`Numeric` in SQLAlchemy) — never floating point —
 to avoid rounding errors in financial calculations.
 
 ## Generated Identifiers
