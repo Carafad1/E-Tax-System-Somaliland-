@@ -1,0 +1,22 @@
+name: Keep backend and database warm
+
+# Render's free tier spins the web service down after 15 minutes with no
+# incoming request (cold start on the next one takes 30-60s), and Aiven's
+# free MySQL is powered off after a period with no database activity.
+# Pinging a real, lightweight, public, no-auth endpoint that queries the
+# database (not just /api/health, which is a static response) every 10
+# minutes keeps both awake continuously, at zero cost, with no server or
+# account beyond the GitHub repo already in use.
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping backend (touches the database)
+        run: |
+          curl -sS -o /dev/null -w "HTTP %{http_code}\n" --max-time 60 \
+            https://etax-api-56s7.onrender.com/api/cities
