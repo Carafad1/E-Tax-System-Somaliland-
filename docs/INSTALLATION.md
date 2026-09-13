@@ -38,7 +38,7 @@ Open `backend/.env` and review the values. The defaults work out of the box for 
 development (SQLite, admin/1234). **Change `SECRET_KEY`, `JWT_SECRET_KEY` and
 `ADMIN_PASSWORD` before any real deployment.**
 
-Seed the database (creates the admin account, cities, tax types, and demo citizen/payment data):
+Seed the database (creates the admin account, the cities and the tax types — reference data only, no demo citizens or payments):
 
 ```bash
 python -m database.seed
@@ -117,12 +117,17 @@ connect to E-Tax server," allow Python through the firewall for private networks
 
 See [DATABASE.md](DATABASE.md) and [DEPLOYMENT.md](DEPLOYMENT.md).
 
-## 7. Admin & Demo Credentials
+## 7. Admin Credentials
 
 | Role | Identifier | Password | Notes |
 |---|---|---|---|
-| Administrator | `admin` | `1234` | Configured via `ADMIN_USERNAME`/`ADMIN_PASSWORD` in `.env` |
-| Demo citizen | `+252634000001` | `Demo@1234` | Payment PIN: `1234` |
-| Demo citizen (business) | `+252634000002` | `Demo@1234` | Payment PIN: `1234` |
+| Administrator | `admin` | `1234` | Local development default. Configured via `ADMIN_USERNAME`/`ADMIN_PASSWORD` in `.env`; set a real password before any deployment. |
 
-All demo data is clearly marked as sample/development data and is not a real government record.
+**There are no demo citizens.** Seeding creates only the administrator
+account, the cities and the tax types - the reference data every deployment
+needs. The dashboards are meant to show real, user-registered records and
+nothing else, so create a citizen through the app's own registration screen
+(or `POST /api/users` as an administrator) when you need test data.
+
+Citizen passwords are 4 digits, and a payment PIN (4-6 digits) must be set
+from the app before that citizen can pay.

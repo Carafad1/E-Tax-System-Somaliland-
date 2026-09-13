@@ -17,6 +17,32 @@
 </head>
 <body>
 
+  <!-- ADMIN LOGIN GATE
+       The dashboard endpoints require an administrator token; this overlay
+       obtains one and stays in front of the page until it does. -->
+  <div class="login-overlay" id="login-overlay">
+    <form class="login-card" id="login-form" autocomplete="on">
+      <div class="login-brand">
+        <svg width="48" height="48" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="50" cy="50" r="48" fill="#0D2137" stroke="#10B981" stroke-width="3"/>
+          <path d="M50 15 L58 35 L80 35 L62 48 L68 70 L50 56 L32 70 L38 48 L20 35 L42 35 Z" fill="#10B981"/>
+          <rect x="25" y="75" width="50" height="4" fill="#EF4444"/>
+        </svg>
+        <h1>E-TAX SYSTEM</h1>
+        <p>Somaliland &middot; Administrator Sign In</p>
+      </div>
+      <label class="login-label" for="login-username">Username</label>
+      <input class="login-input" id="login-username" name="username" type="text"
+             autocomplete="username" required>
+      <label class="login-label" for="login-password">Password</label>
+      <input class="login-input" id="login-password" name="password" type="password"
+             autocomplete="current-password" required>
+      <div class="login-error" id="login-error"></div>
+      <button class="login-button" id="login-submit" type="submit">Sign In</button>
+    </form>
+  </div>
+
+
   <div class="app-layout">
     
     <!-- LEFT SIDEBAR -->

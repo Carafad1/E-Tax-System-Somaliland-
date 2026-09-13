@@ -53,7 +53,15 @@ def update_city(city_id):
 
     payload = request.get_json(silent=True) or {}
     if payload.get("name"):
-        city.name = payload["name"].strip()
+        name = str(payload["name"]).strip()
+        if not name:
+            return error("City name is required.", errors={"name": "Required."}, status_code=422)
+        # cities.name is UNIQUE - without this check a rename onto an
+        # existing city raised an IntegrityError and surfaced as a 500,
+        # while create_city() already returned a clean 409 for the same case.
+        if City.query.filter(City.name == name, City.id != city.id).first():
+            return error("This city already exists.", errors={"name": "Already exists."}, status_code=409)
+        city.name = name
     if "region" in payload:
         city.region = (payload.get("region") or "").strip() or None
     if "is_active" in payload:

@@ -56,11 +56,13 @@ TAX_TYPE_NAMES = {t["name"] for t in TAX_TYPES}
 
 
 def _ensure_tax_type_columns():
-    """Lightweight, idempotent schema fix for SQLite dev/demo databases: this
-    project has no Alembic/Flask-Migrate setup, and db.create_all() only
-    creates missing tables, it never alters an existing one. When the
-    TaxType model gained min_amount_slsh/min_amount_usd (replacing the old
-    single min_amount/currency pair), older on-disk databases need those
+    """Lightweight, idempotent schema fix for SQLite dev/demo databases only.
+
+    Production schema is owned by Alembic (see migrations/), but a local
+    SQLite file is created by db.create_all(), which only creates missing
+    tables - it never alters an existing one. When the TaxType model gained
+    min_amount_slsh/min_amount_usd (replacing the old single
+    min_amount/currency pair), older on-disk dev databases needed those
     columns added by hand. Old columns are left in place, unused, rather
     than dropped - safer than DROP COLUMN across SQLite versions."""
     if db.engine.url.drivername != "sqlite":
@@ -79,8 +81,13 @@ def seed(app=None):
 
         app = create_app()
     with app.app_context():
-        db.create_all()
-        _ensure_tax_type_columns()
+        # SQLite-only, matching create_app(): on MySQL/Postgres the schema
+        # belongs to Alembic (`flask db upgrade` runs before this process
+        # starts - see Procfile), and create_all() here could race ahead of
+        # it and create tables the migrations then fail to create themselves.
+        if db.engine.url.drivername == "sqlite":
+            db.create_all()
+            _ensure_tax_type_columns()
 
         # --- Admin ---
         admin = AdminUser.query.filter_by(username=app.config["ADMIN_USERNAME"]).first()
@@ -98,15 +105,10 @@ def seed(app=None):
         db.session.commit()
 
         # --- Cities ---
-        city_lookup = {}
         for name, region in CITIES:
-            city = City.query.filter_by(name=name).first()
-            if not city:
-                city = City(name=name, region=region)
-                db.session.add(city)
-                db.session.flush()
+            if not City.query.filter_by(name=name).first():
+                db.session.add(City(name=name, region=region))
                 print(f"Created city '{name}'.")
-            city_lookup[name] = city
         db.session.commit()
 
         # --- Remove obsolete tax types (system now supports only the three
@@ -128,20 +130,16 @@ def seed(app=None):
         # TAX_TYPES on every startup rather than only set once - this
         # guarantees the enforced minimums always match spec even if the
         # on-disk data predates a change here.
-        tax_type_lookup = {}
         for tax_type_data in TAX_TYPES:
             tax_type = TaxType.query.filter_by(name=tax_type_data["name"]).first()
             if not tax_type:
-                tax_type = TaxType(**tax_type_data)
-                db.session.add(tax_type)
-                db.session.flush()
-                print(f"Created tax type '{tax_type.name}'.")
+                db.session.add(TaxType(**tax_type_data))
+                print(f"Created tax type '{tax_type_data['name']}'.")
             else:
                 tax_type.description = tax_type_data["description"]
                 tax_type.frequency = tax_type_data["frequency"]
                 tax_type.min_amount_slsh = tax_type_data["min_amount_slsh"]
                 tax_type.min_amount_usd = tax_type_data["min_amount_usd"]
-            tax_type_lookup[tax_type.name] = tax_type
         db.session.commit()
 
         print("\nSeeding complete.")

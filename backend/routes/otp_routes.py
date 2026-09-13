@@ -1,4 +1,4 @@
-import random
+import secrets
 import time
 
 from flask import Blueprint, request
@@ -24,7 +24,7 @@ def send_otp():
     if not phone:
         return error("Phone number is required.", status_code=422)
 
-    code = f"{random.randint(0, 999999):06d}"
+    code = f"{secrets.randbelow(1000000):06d}"
     _OTP_STORE[phone] = {"code": code, "expires_at": time.time() + _OTP_TTL_SECONDS}
 
     return success(

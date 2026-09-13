@@ -5,30 +5,40 @@ import sys
 LOG_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "logs")
 os.makedirs(LOG_DIR, exist_ok=True)
 
-_configured = False
+_FORMATTER = logging.Formatter("%(asctime)s | %(levelname)s | %(name)s | %(message)s")
+_shared_handlers = None
+
+
+def _handlers():
+    """One stdout handler + one file handler, created once and reused by
+    every logger, so the log file is never opened more than once."""
+    global _shared_handlers
+    if _shared_handlers is None:
+        stream_handler = logging.StreamHandler(sys.stdout)
+        stream_handler.setFormatter(_FORMATTER)
+
+        file_handler = logging.FileHandler(os.path.join(LOG_DIR, "etax.log"), encoding="utf-8")
+        file_handler.setFormatter(_FORMATTER)
+
+        _shared_handlers = (stream_handler, file_handler)
+    return _shared_handlers
 
 
 def get_logger(name="etax"):
-    global _configured
+    """Return a logger that writes to stdout and to logs/etax.log.
+
+    Handlers are attached per logger (all sharing the same handler pair).
+    A single "already configured" flag would only ever configure the FIRST
+    logger created - every later one ("app", "auth", ...) would end up with
+    no handlers and propagate to an unconfigured root, silently dropping
+    everything below WARNING.
+    """
     logger = logging.getLogger(name)
-    if not _configured:
+    if not logger.handlers:
         logger.setLevel(logging.INFO)
-        formatter = logging.Formatter(
-            "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
-        )
-
-        stream_handler = logging.StreamHandler(sys.stdout)
-        stream_handler.setFormatter(formatter)
-        logger.addHandler(stream_handler)
-
-        file_handler = logging.FileHandler(
-            os.path.join(LOG_DIR, "etax.log"), encoding="utf-8"
-        )
-        file_handler.setFormatter(formatter)
-        logger.addHandler(file_handler)
-
+        for handler in _handlers():
+            logger.addHandler(handler)
         logger.propagate = False
-        _configured = True
     return logger
 
 

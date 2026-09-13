@@ -22,7 +22,7 @@ def validate_email(value, required=False):
         if required:
             return "Email is required."
         return None
-    if not EMAIL_PATTERN.match(value.strip()):
+    if not isinstance(value, str) or not EMAIL_PATTERN.match(value.strip()):
         return "Please enter a valid email address."
     return None
 
@@ -54,4 +54,12 @@ def validate_pin(value):
 
 
 def normalize_phone(value):
+    """Strip spaces and dashes from a phone number.
+
+    Tolerates anything a JSON body can carry (None, a number, ...): callers
+    normalize the phone *before* returning their validation errors, so a
+    non-string value must not turn a 422 into a 500.
+    """
+    if not isinstance(value, str):
+        return "" if value is None else str(value).strip()
     return re.sub(r"[\s-]", "", value.strip())

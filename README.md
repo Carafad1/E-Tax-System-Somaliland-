@@ -95,10 +95,12 @@ Wi-Fi network). The app will load directly on your device.
 
 ### 3. Log in
 
-- **Citizen**: register a new account in the app, or use the seeded demo citizen
-  (phone `+252634000001`, password `Demo@1234`, payment PIN `1234`).
+- **Citizen**: register a new account in the app. Seeding creates no demo citizens —
+  the dashboards only ever show real, user-registered records. After registering,
+  set a payment PIN from the profile screen before making a payment.
 - **Administrator**: tap "Administrator Login" on the welcome screen — username `admin`,
   password `1234` (development credentials, configured via `backend/.env`).
+  The same credentials sign in to the web admin dashboard at `http://localhost:5000/`.
 
 ## Documentation
 

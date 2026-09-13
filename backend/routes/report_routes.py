@@ -9,6 +9,22 @@ from responses.api_response import error
 
 report_bp = Blueprint("reports", __name__, url_prefix="/api/reports")
 
+# Spreadsheet applications treat a cell starting with one of these as a
+# formula, so a taxpayer whose name begins with "=" or "+" could turn an
+# exported report into executable content on the reviewer's machine. Every
+# text cell is prefixed with a single quote in that case, which Excel and
+# LibreOffice both render as plain text.
+FORMULA_PREFIXES = ("=", "+", "-", "@", "\t", "\r")
+
+
+def _csv_safe(value):
+    if value is None:
+        return ""
+    text = str(value)
+    if text.startswith(FORMULA_PREFIXES):
+        return "'" + text
+    return text
+
 
 @report_bp.get("/export")
 @admin_required
@@ -25,14 +41,14 @@ def export_report():
         for payment in Payment.query.order_by(Payment.created_at.desc()).all():
             writer.writerow(
                 [
-                    payment.reference_id,
-                    payment.transaction_id,
-                    payment.user.full_name if payment.user else "",
-                    payment.tax_type.name if payment.tax_type else "",
+                    _csv_safe(payment.reference_id),
+                    _csv_safe(payment.transaction_id),
+                    _csv_safe(payment.user.full_name if payment.user else ""),
+                    _csv_safe(payment.tax_type.name if payment.tax_type else ""),
                     float(payment.amount),
-                    payment.currency,
-                    payment.payment_method,
-                    payment.status,
+                    _csv_safe(payment.currency),
+                    _csv_safe(payment.payment_method),
+                    _csv_safe(payment.status),
                     payment.created_at.isoformat() if payment.created_at else "",
                 ]
             )
@@ -41,13 +57,13 @@ def export_report():
         for user in User.query.filter_by(role="citizen").order_by(User.created_at.desc()).all():
             writer.writerow(
                 [
-                    user.tin,
-                    user.full_name,
-                    user.phone,
-                    user.email or "",
-                    user.city.name if user.city else "",
-                    user.taxpayer_type,
-                    user.status,
+                    _csv_safe(user.tin),
+                    _csv_safe(user.full_name),
+                    _csv_safe(user.phone),
+                    _csv_safe(user.email or ""),
+                    _csv_safe(user.city.name if user.city else ""),
+                    _csv_safe(user.taxpayer_type),
+                    _csv_safe(user.status),
                 ]
             )
     elif report_type == "receipts":
@@ -56,12 +72,12 @@ def export_report():
             payment = receipt.payment
             writer.writerow(
                 [
-                    receipt.receipt_number,
-                    payment.reference_id if payment else "",
-                    payment.user.full_name if payment and payment.user else "",
+                    _csv_safe(receipt.receipt_number),
+                    _csv_safe(payment.reference_id if payment else ""),
+                    _csv_safe(payment.user.full_name if payment and payment.user else ""),
                     float(payment.amount) if payment else "",
-                    payment.currency if payment else "",
-                    payment.status if payment else "",
+                    _csv_safe(payment.currency if payment else ""),
+                    _csv_safe(payment.status if payment else ""),
                     receipt.created_at.isoformat() if receipt.created_at else "",
                 ]
             )

@@ -3,6 +3,7 @@ from flask import Blueprint, g, request
 from middleware.auth_middleware import admin_required, token_required
 from responses.api_response import success
 from services.dashboard_service import (
+    TREND_PERIODS,
     admin_stats,
     citizen_stats,
     overview,
@@ -30,7 +31,12 @@ def stats():
 @dashboard_bp.get("/revenue-over-time")
 @admin_required
 def revenue():
-    period = request.args.get("period", "monthly")
+    # "daily" is what this endpoint has always actually returned, and what
+    # the reports screen renders; naming any other default here would just
+    # mislabel the same rows.
+    period = request.args.get("period", "daily")
+    if period not in TREND_PERIODS:
+        period = "daily"
     return success(
         "Revenue trend loaded.",
         data={
@@ -61,23 +67,30 @@ def payment_methods_summary():
 
 
 @dashboard_bp.get("/currency")
+@admin_required
 def currency_summary():
     return success("Currency breakdown loaded.", data={"items": revenue_by_currency()})
 
 
 @dashboard_bp.get("/tax-types")
+@admin_required
 def tax_types_summary():
     return success("Tax types performance loaded.", data={"items": tax_type_ranking()})
 
 
 @dashboard_bp.get("/recent-taxpayers")
+@admin_required
 def recent_taxpayers_route():
-    limit = request.args.get("limit", 5, type=int)
+    # Clamped so a caller-supplied ?limit= can never turn this widget into a
+    # full table scan of every taxpayer. Checked against None rather than
+    # `or 5` so an explicit ?limit=0 is honoured instead of silently
+    # becoming the default.
+    raw_limit = request.args.get("limit", type=int)
+    limit = min(max(raw_limit if raw_limit is not None else 5, 1), 50)
     return success("Recent taxpayers loaded.", data={"items": recent_taxpayers(limit=limit)})
 
 
 @dashboard_bp.get("/overview")
+@admin_required
 def overview_route():
     return success("Dashboard overview loaded.", data=overview())
-
-

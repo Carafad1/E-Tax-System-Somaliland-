@@ -39,9 +39,12 @@ def update_profile():
         return error("Please correct the highlighted fields.", errors=errors, status_code=422)
 
     user = g.current_user
+    # str() before strip(): a JSON body can legitimately carry a number or a
+    # boolean here, and an AttributeError on .strip() would turn a bad field
+    # into a 500 instead of a saved (or rejected) profile.
     for field in ["full_name", "address", "occupation", "business_name", "business_type"]:
         if field in payload and payload[field] is not None:
-            setattr(user, field, payload[field].strip())
+            setattr(user, field, str(payload[field]).strip())
 
     if payload.get("city_id"):
         city = db.session.get(City, payload["city_id"])

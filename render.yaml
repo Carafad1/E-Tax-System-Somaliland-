@@ -18,7 +18,10 @@ services:
         generateValue: true
       - key: ADMIN_USERNAME
         value: admin
+      # Set in the Render dashboard at deploy time - never committed. The
+      # seeder creates the admin account with whatever value is supplied
+      # here, so a checked-in default would ship a known production password.
       - key: ADMIN_PASSWORD
-        value: "1234"
+        sync: false
       - key: FLASK_ENV
         value: production

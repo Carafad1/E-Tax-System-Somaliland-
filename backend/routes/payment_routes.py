@@ -4,7 +4,7 @@ from flask import Blueprint, g, request
 
 from extensions import db, limiter
 from middleware.auth_middleware import token_required, admin_required
-from models import PAYMENT_STATUSES, Payment, TaxType, User
+from models import CURRENCIES, PAYMENT_METHODS, PAYMENT_STATUSES, Payment, TaxType, User
 from responses.api_response import error, success
 from security.passwords import verify_password
 from services.audit_service import log_action
@@ -17,6 +17,10 @@ from validators.payment_validator import validate_payment_payload
 payment_bp = Blueprint("payments", __name__, url_prefix="/api/payments")
 
 SORT_FIELDS = {"amount", "created_at", "status", "payment_date"}
+
+# Matches Payment.notes' column width - MySQL in strict mode rejects a
+# longer value outright instead of truncating it.
+NOTES_MAX_LENGTH = 255
 
 
 @payment_bp.get("")
@@ -96,12 +100,18 @@ def _citizen_create_payment(payload):
     user = g.current_user
     errors = validate_payment_payload(payload)
 
+    # Resolved once, the same way validate_payment_payload() reads them, so
+    # a body that omits "currency" (which the validator accepts, defaulting
+    # to SLSH) can never raise a KeyError further down.
+    currency = payload.get("currency", "SLSH")
+    payment_method = payload.get("payment_method")
+
     tax_type = TaxType.query.filter_by(id=payload.get("tax_type_id"), is_active=True).first()
     if not tax_type:
         errors["tax_type_id"] = "Please select a valid tax type."
 
     if not errors:
-        amount_error = validate_tax_amount(tax_type, float(payload["amount"]), payload["currency"])
+        amount_error = validate_tax_amount(tax_type, float(payload["amount"]), currency)
         if amount_error:
             errors["amount"] = amount_error
 
@@ -118,8 +128,8 @@ def _citizen_create_payment(payload):
             user=user,
             tax_type=tax_type,
             amount=float(payload["amount"]),
-            currency=payload["currency"],
-            payment_method=payload["payment_method"],
+            currency=currency,
+            payment_method=payment_method,
         )
     except DuplicatePaymentError as exc:
         return error(str(exc), status_code=409)
@@ -159,17 +169,48 @@ def _admin_create_manual_payment(payload):
     if status not in PAYMENT_STATUSES:
         return error("Invalid payment status.", errors={"status": "Invalid."}, status_code=422)
 
+    # Validated here too, not only on the citizen path - an unrecognized
+    # currency or method would otherwise be stored and then silently skipped
+    # by every dashboard aggregation that groups on those columns.
+    currency = payload.get("currency", "SLSH")
+    if currency not in CURRENCIES:
+        return error("Please select a supported currency.", errors={"currency": "Invalid."}, status_code=422)
+
+    payment_method = payload.get("payment_method", "BANK")
+    if payment_method not in PAYMENT_METHODS:
+        return error(
+            "Please select a valid payment method.",
+            errors={"payment_method": "Invalid."},
+            status_code=422,
+        )
+
+    reference_id = (payload.get("reference_id") or "").strip() or unique_reference_id()
+    if db.session.query(Payment.id).filter_by(reference_id=reference_id).first():
+        return error(
+            "This reference ID is already in use.",
+            errors={"reference_id": "Already exists."},
+            status_code=409,
+        )
+
+    transaction_id = (payload.get("transaction_id") or "").strip() or unique_transaction_id()
+    if db.session.query(Payment.id).filter_by(transaction_id=transaction_id).first():
+        return error(
+            "This transaction ID is already in use.",
+            errors={"transaction_id": "Already exists."},
+            status_code=409,
+        )
+
     payment = Payment(
         user_id=user.id,
         tax_type_id=tax_type.id,
         amount=amount,
-        currency=payload.get("currency", "SLSH"),
-        payment_method=payload.get("payment_method", "BANK"),
+        currency=currency,
+        payment_method=payment_method,
         status=status,
-        notes=(payload.get("notes") or "Manually recorded by administrator.").strip(),
+        notes=(payload.get("notes") or "Manually recorded by administrator.").strip()[:NOTES_MAX_LENGTH],
         payment_date=datetime.now(timezone.utc) if status == "completed" else None,
-        reference_id=payload.get("reference_id") or unique_reference_id(),
-        transaction_id=payload.get("transaction_id") or unique_transaction_id(),
+        reference_id=reference_id,
+        transaction_id=transaction_id,
     )
     db.session.add(payment)
     db.session.commit()
@@ -201,7 +242,8 @@ def update_payment(payment_id):
         payment.tax_type_id = tax_type.id
 
     if "notes" in payload:
-        payment.notes = payload.get("notes")
+        notes = payload.get("notes")
+        payment.notes = str(notes).strip()[:NOTES_MAX_LENGTH] if notes else None
 
     db.session.commit()
     log_action(

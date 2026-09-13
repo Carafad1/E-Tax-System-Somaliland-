@@ -4,29 +4,139 @@
    ========================================================================== */
 
 const API_BASE_URL = '/api/dashboard';
+const TOKEN_STORAGE_KEY = 'etax_admin_token';
 
 // Chart Instances
 let paymentMethodsChartInstance = null;
 let revenueTrendChartInstance = null;
 let paymentStatusChartInstance = null;
+let refreshTimer = null;
+
+/* --------------------------------------------------------------------------
+   ESCAPING
+   Every value below is rendered through innerHTML, and taxpayer names, city
+   names and tax type names are all entered by users. Interpolating them raw
+   would let a taxpayer registering as e.g. `<img onerror=...>` run script in
+   an administrator's browser, so nothing reaches the DOM unescaped.
+   -------------------------------------------------------------------------- */
+function escapeHtml(value) {
+  if (value === null || value === undefined) return '';
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/* --------------------------------------------------------------------------
+   AUTHENTICATION
+   The dashboard endpoints require an administrator token. The token lives in
+   sessionStorage so it is gone when the tab closes, and is never put in the
+   URL.
+   -------------------------------------------------------------------------- */
+function getToken() {
+  try {
+    return sessionStorage.getItem(TOKEN_STORAGE_KEY);
+  } catch (_err) {
+    return null;
+  }
+}
+
+function setToken(token) {
+  try {
+    if (token) sessionStorage.setItem(TOKEN_STORAGE_KEY, token);
+    else sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+  } catch (_err) {
+    /* Private browsing with storage disabled - the session just won't persist. */
+  }
+}
+
+function showLogin(message) {
+  const overlay = document.getElementById('login-overlay');
+  const errorEl = document.getElementById('login-error');
+  if (errorEl) {
+    errorEl.textContent = message || '';
+    errorEl.style.display = message ? 'block' : 'none';
+  }
+  if (overlay) overlay.style.display = 'flex';
+  if (refreshTimer) {
+    clearInterval(refreshTimer);
+    refreshTimer = null;
+  }
+}
+
+function hideLogin() {
+  const overlay = document.getElementById('login-overlay');
+  if (overlay) overlay.style.display = 'none';
+}
+
+function startDashboard() {
+  hideLogin();
+  fetchDashboardData();
+  if (!refreshTimer) {
+    refreshTimer = setInterval(fetchDashboardData, 30000);
+  }
+}
+
+async function submitLogin(event) {
+  event.preventDefault();
+  const button = document.getElementById('login-submit');
+  const username = document.getElementById('login-username').value.trim();
+  const password = document.getElementById('login-password').value;
+
+  if (button) { button.disabled = true; button.textContent = 'Signing in...'; }
+  try {
+    const response = await fetch('/api/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+    });
+    const result = await response.json();
+    if (!response.ok || !result.success || !result.data?.token) {
+      showLogin(result.message || 'Invalid username or password.');
+      return;
+    }
+    setToken(result.data.token);
+    startDashboard();
+  } catch (_err) {
+    showLogin('Unable to reach the server. Please try again.');
+  } finally {
+    if (button) { button.disabled = false; button.textContent = 'Sign In'; }
+  }
+}
 
 // Initialize on DOM Ready
 document.addEventListener('DOMContentLoaded', () => {
-  fetchDashboardData();
-  
-  // Set Auto-Refresh every 30 seconds
-  setInterval(fetchDashboardData, 30000);
+  const form = document.getElementById('login-form');
+  if (form) form.addEventListener('submit', submitLogin);
+
+  if (getToken()) startDashboard();
+  else showLogin('');
 });
 
 // Main Data Fetcher
 async function fetchDashboardData() {
+  const token = getToken();
+  if (!token) {
+    showLogin('');
+    return;
+  }
+
   const refreshIcon = document.getElementById('refresh-icon');
   if (refreshIcon) refreshIcon.classList.add('fa-spin');
-  
+
   try {
-    const response = await fetch(`${API_BASE_URL}/overview`);
+    const response = await fetch(`${API_BASE_URL}/overview`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (response.status === 401 || response.status === 403) {
+      setToken(null);
+      showLogin('Your session has expired. Please sign in again.');
+      return;
+    }
     if (!response.ok) throw new Error('API server returned error status');
-    
+
     const result = await response.json();
     if (result.success && result.data) {
       hideErrorBanner();
@@ -133,7 +243,7 @@ function renderTopCities(cities) {
         <div class="city-info">
           <div class="city-name">
             <span class="city-rank">${rankStr}</span>
-            <span>${c.city || 'Unknown'}</span>
+            <span>${escapeHtml(c.city || 'Unknown')}</span>
           </div>
           <div>
             <span class="city-revenue">${formatNumber(revenue)} SLSH</span>
@@ -154,16 +264,9 @@ function renderPaymentMethods(methods) {
   const ctx = document.getElementById('paymentMethodsChart')?.getContext('2d');
   if (!ctx) return;
 
-  const defaultMethods = [
-    { method: 'ZAAD', count: 0, percentage: 0 },
-    { method: 'eDahab', count: 0, percentage: 0 },
-    { method: 'Card', count: 0, percentage: 0 },
-    { method: 'Bank Transfer', count: 0, percentage: 0 },
-    { method: 'Other', count: 0, percentage: 0 },
-  ];
-
-  const list = methods.length > 0 ? methods : defaultMethods;
-
+  // The API always returns every charted method (at zero when unused), so
+  // an empty list means "no data", not "fill in a plausible-looking set".
+  const list = methods;
   const labels = list.map(m => m.method);
   const dataVals = list.map(m => m.percentage || 0);
   const colors = ['#10B981', '#0284C7', '#8B5CF6', '#F59E0B', '#64748B'];
@@ -205,7 +308,7 @@ function renderPaymentMethods(methods) {
     legendHtml += `
       <div class="legend-item">
         <span class="legend-dot" style="background-color: ${colors[idx % colors.length]};"></span>
-        <span>${m.method} (${m.percentage}%)</span>
+        <span>${escapeHtml(m.method)} (${Number(m.percentage) || 0}%)</span>
       </div>
     `;
   });
@@ -214,15 +317,12 @@ function renderPaymentMethods(methods) {
 
 // 4. CURRENCY BREAKDOWN
 function renderCurrencyBreakdown(currencyData, stats) {
-  let slshPct = 80.6;
-  let usdPct = 19.4;
-
-  if (currencyData && currencyData.length >= 2) {
-    const slshObj = currencyData.find(c => c.currency === 'SLSH');
-    const usdObj = currencyData.find(c => c.currency === 'USD');
-    if (slshObj) slshPct = slshObj.percentage;
-    if (usdObj) usdPct = usdObj.percentage;
-  }
+  // Starts at zero, not at a plausible-looking split: this is a government
+  // revenue figure, so "no data yet" must read as 0%, never as an invented
+  // percentage that looks like a real measurement.
+  const list = currencyData || [];
+  const slshPct = Number(list.find(c => c.currency === 'SLSH')?.percentage) || 0;
+  const usdPct = Number(list.find(c => c.currency === 'USD')?.percentage) || 0;
 
   document.getElementById('slsh-pct').textContent = `${slshPct}%`;
   document.getElementById('usd-pct').textContent = `${usdPct}%`;
@@ -241,13 +341,17 @@ function renderTaxTypes(taxTypes) {
 
   let html = '';
   taxTypes.forEach(t => {
+    // "total" mirrors the backend's own SLSH-first fallback (see
+    // tax_type_ranking()): it holds USD when a tax type has no SLSH revenue,
+    // so the currency label has to follow it rather than being hardcoded.
+    const totalCurrency = (t.total_slsh || 0) > 0 ? 'SLSH' : ((t.total_usd || 0) > 0 ? 'USD' : 'SLSH');
     html += `
       <div class="tax-type-card">
-        <div class="tax-type-name">${t.name || 'General Tax'}</div>
-        <div class="tax-type-revenue">${formatNumber(t.total || 0)} SLSH</div>
+        <div class="tax-type-name">${escapeHtml(t.name || 'General Tax')}</div>
+        <div class="tax-type-revenue">${formatNumber(t.total || 0)} ${totalCurrency}</div>
         <div class="tax-type-meta">
-          <span>Frequency: ${t.frequency || 'N/A'}</span>
-          <strong>${t.percentage || 0}%</strong>
+          <span>Frequency: ${escapeHtml(t.frequency || 'N/A')}</span>
+          <strong>${Number(t.percentage) || 0}%</strong>
         </div>
       </div>
     `;
@@ -260,9 +364,10 @@ function renderRevenueTrend(trendData) {
   const ctx = document.getElementById('revenueTrendChart')?.getContext('2d');
   if (!ctx) return;
 
-  const defaultMonths = ['Dec 2025', 'Jan 2026', 'Feb 2026', 'Mar 2026', 'Apr 2026', 'May 2026', 'Jun 2026'];
-  const labels = trendData.length > 0 ? trendData.map(d => d.month) : defaultMonths;
-  const values = trendData.length > 0 ? trendData.map(d => d.total) : [0, 0, 0, 0, 0, 0, 0];
+  // No invented month labels: an empty trend renders an empty chart rather
+  // than a hardcoded axis that implies months of measured zero revenue.
+  const labels = trendData.map(d => d.month);
+  const values = trendData.map(d => d.total);
 
   const gradient = ctx.createLinearGradient(0, 0, 0, 260);
   gradient.addColorStop(0, 'rgba(16, 185, 129, 0.35)');
@@ -395,18 +500,21 @@ function renderRecentTaxpayers(taxpayers) {
 
   let html = '';
   taxpayers.forEach((t, idx) => {
-    const statusClass = t.status.toLowerCase() === 'active' ? 'active' : 'pending';
+    // Nullable columns (city, tax_type) render as a dash rather than the
+    // string "null", and status is guarded - it is not guaranteed present.
+    const status = t.status || 'Unknown';
+    const statusClass = status.toLowerCase() === 'active' ? 'active' : 'pending';
     html += `
       <tr>
         <td><strong>${idx + 1}</strong></td>
-        <td><strong>${t.name}</strong></td>
-        <td><code>${t.tin}</code></td>
-        <td>${t.phone}</td>
-        <td>${t.city}</td>
-        <td>${t.tax_type}</td>
-        <td><strong>${t.total_paid_formatted}</strong></td>
-        <td><span class="badge-status ${statusClass}">${t.status}</span></td>
-        <td>${t.registered_date}</td>
+        <td><strong>${escapeHtml(t.name || '-')}</strong></td>
+        <td><code>${escapeHtml(t.tin || '-')}</code></td>
+        <td>${escapeHtml(t.phone || '-')}</td>
+        <td>${escapeHtml(t.city || '-')}</td>
+        <td>${escapeHtml(t.tax_type || '-')}</td>
+        <td><strong>${escapeHtml(t.total_paid_formatted || '-')}</strong></td>
+        <td><span class="badge-status ${statusClass}">${escapeHtml(status)}</span></td>
+        <td>${escapeHtml(t.registered_date || '-')}</td>
       </tr>
     `;
   });
@@ -449,6 +557,7 @@ function formatNumberShort(num) {
 
 function logoutAdmin() {
   if (confirm('Are you sure you want to log out from Admin Dashboard?')) {
+    setToken(null);
     window.location.reload();
   }
 }

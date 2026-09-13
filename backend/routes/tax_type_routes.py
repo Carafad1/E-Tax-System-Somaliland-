@@ -77,7 +77,15 @@ def update_tax_type(tax_type_id):
 
     payload = request.get_json(silent=True) or {}
     if payload.get("name"):
-        tax_type.name = payload["name"].strip()
+        name = str(payload["name"]).strip()
+        if not name:
+            return error("Tax type name is required.", errors={"name": "Required."}, status_code=422)
+        # tax_types.name is UNIQUE - same reasoning as create_tax_type(),
+        # which already returns a 409 rather than letting the constraint
+        # bubble up as a 500.
+        if TaxType.query.filter(TaxType.name == name, TaxType.id != tax_type.id).first():
+            return error("This tax type already exists.", errors={"name": "Already exists."}, status_code=409)
+        tax_type.name = name
     if "description" in payload:
         tax_type.description = (payload.get("description") or "").strip() or None
     if payload.get("frequency"):

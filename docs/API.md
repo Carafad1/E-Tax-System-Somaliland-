@@ -138,10 +138,22 @@ Payment statuses: `pending, processing, completed, failed, cancelled`. A payment
 | Method | Path | Notes |
 |---|---|---|
 | GET | `/dashboard/stats` | Auth required. Citizen: own TIN/total paid/outstanding/recent payment. Admin: totals across citizens/businesses/payments/revenue/receipts. |
-| GET | `/dashboard/revenue` | Admin only. Revenue trend (last 14 days) + revenue by tax type. |
+| GET | `/dashboard/revenue` | Admin only. Revenue trend + revenue by tax type. `?period=daily|weekly|monthly` (default `daily`; 14 / 90 / 365 days back). |
 | GET | `/dashboard/payments` | Admin only. Payment counts by status. |
-| GET | `/dashboard/cities` | Admin only. Revenue by city. |
-| GET | `/dashboard/payment-methods` | Admin only. Completed-payment counts by method. |
+| GET | `/dashboard/cities` | Admin only. Revenue and payment count by city. |
+| GET | `/dashboard/payment-methods` | Admin only. Completed-payment counts and revenue by method (ZAAD, EDAHAB, CARD, BANK; every method is always returned, at zero when unused). |
+| GET | `/dashboard/currency` | Admin only. SLSH/USD totals and their share of revenue. |
+| GET | `/dashboard/tax-types` | Admin only. Payment count and revenue per active tax type. |
+| GET | `/dashboard/recent-taxpayers` | Admin only. Most recently registered taxpayers. `?limit=` (1-50, default 5). |
+| GET | `/dashboard/overview` | Admin only. Everything the admin dashboard renders, in one response: stat cards, payment status breakdown, payment methods, currency split, tax type ranking, revenue by city, monthly trend, recent taxpayers. |
+
+**Currencies are never summed.** SLSH and USD have no conversion rate the
+system agrees on, so every revenue figure is reported per currency. Where a
+response carries a single `total` / `amount` field it is the **SLSH** figure
+(matching how the dashboards label those cards), with the USD figure exposed
+alongside it as `total_usd` / `amount_usd`. Percentages on the payment-method
+and tax-type breakdowns are shares of the payment **count**, which is
+currency-neutral.
 
 ## Receipts
 

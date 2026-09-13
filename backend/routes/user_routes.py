@@ -22,6 +22,10 @@ user_bp = Blueprint("users", __name__, url_prefix="/api/users")
 
 SORT_FIELDS = {"full_name", "created_at", "status", "taxpayer_type"}
 
+# The only account states the app knows how to render and authenticate
+# against (see middleware/auth_middleware.py, which only admits "active").
+USER_STATUSES = ["active", "inactive", "suspended"]
+
 
 @user_bp.get("")
 @admin_required
@@ -70,11 +74,14 @@ def create_user():
     errors = validate_registration(payload)
     phone = normalize_phone(payload.get("phone", ""))
     email = (payload.get("email") or "").strip().lower() or None
+    id_number = (payload.get("id_number") or "").strip() or None
 
     if not errors.get("phone") and User.query.filter_by(phone=phone).first():
         errors["phone"] = "This phone number is already registered."
     if email and User.query.filter_by(email=email).first():
         errors["email"] = "This email is already registered."
+    if id_number and User.query.filter_by(id_number=id_number).first():
+        errors["id_number"] = "This ID number is already registered."
 
     if errors:
         return error("Please correct the highlighted fields.", errors=errors, status_code=422)
@@ -85,7 +92,7 @@ def create_user():
         full_name=payload["full_name"].strip(),
         email=email,
         phone=phone,
-        id_number=(payload.get("id_number") or "").strip() or None,
+        id_number=id_number,
         tin=unique_tin(),
         city_id=city.id if city else None,
         address=(payload.get("address") or "").strip() or None,
@@ -127,9 +134,18 @@ def update_user(user_id):
     if errors:
         return error("Please correct the highlighted fields.", errors=errors, status_code=422)
 
-    for field in ["full_name", "address", "occupation", "business_name", "status"]:
+    if "status" in payload and payload["status"] is not None:
+        if payload["status"] not in USER_STATUSES:
+            return error(
+                "Invalid account status.",
+                errors={"status": f"Must be one of: {', '.join(USER_STATUSES)}."},
+                status_code=422,
+            )
+        user.status = payload["status"]
+
+    for field in ["full_name", "address", "occupation", "business_name"]:
         if field in payload and payload[field] is not None:
-            setattr(user, field, payload[field])
+            setattr(user, field, str(payload[field]).strip())
 
     if payload.get("email"):
         email = payload["email"].strip().lower()
