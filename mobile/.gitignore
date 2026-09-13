@@ -1,0 +1,6 @@
+node_modules/
+.expo/
+dist/
+android/build/
+*.log
+*.tmp

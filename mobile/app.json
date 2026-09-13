@@ -1,0 +1,65 @@
+{
+  "expo": {
+    "name": "E-Tax System Somaliland",
+    "slug": "etax-system-somaliland",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "scheme": "etaxsomaliland",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.etaxsomaliland.mobile",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Camera access is required to scan a receipt QR code and to take a profile photo.",
+        "NSPhotoLibraryUsageDescription": "Photo library access is required to choose a profile photo."
+      }
+    },
+    "android": {
+      "package": "com.etaxsomaliland.mobile",
+      "adaptiveIcon": {
+        "backgroundColor": "#1261A0",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Camera access is required to scan a receipt QR code for verification."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Photo library access is required to choose a profile photo.",
+          "cameraPermission": "Camera access is required to take a profile photo."
+        }
+      ],
+      "expo-secure-store",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#1261A0"
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "5bc016cf-6378-4dc1-a8a7-69237c65a87a"
+      }
+    },
+    "owner": "1234carafaad"
+  }
+}

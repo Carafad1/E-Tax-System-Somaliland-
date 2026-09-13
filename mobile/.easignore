@@ -1,0 +1,9 @@
+node_modules/
+.expo/
+dist/
+android/
+AppData/
+.gemini/
+.claude/
+*.log
+*.tmp

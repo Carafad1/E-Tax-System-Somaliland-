@@ -1,0 +1,61 @@
+export const LANGUAGES = [
+  { value: "en", label: "English" },
+  { value: "so", label: "Soomaali" },
+];
+
+export const DEFAULT_LANGUAGE = "en";
+
+export const translations = {
+  en: {
+    appName: "E-Tax System Somaliland",
+    appSubtitle: "Official Digital Tax Payment System",
+    welcomeTitle: "Welcome to E-Tax Somaliland",
+    welcomeDescription:
+      "Register, manage your tax obligations, make digital payments and receive your official electronic receipt.",
+    login: "Login",
+    createAccount: "Create Account",
+    verifyReceipt: "Verify Receipt",
+    adminLogin: "Administrator Login",
+    logout: "Logout",
+    dashboard: "Dashboard",
+    myTaxes: "My Taxes",
+    payments: "Payments",
+    receipts: "Receipts",
+    profile: "Profile",
+    settings: "Settings",
+    language: "Language",
+    notifications: "Notifications",
+    security: "Security",
+    about: "About",
+    privacy: "Privacy",
+    terms: "Terms",
+    payTax: "Pay Tax",
+    paymentHistory: "Payment History",
+  },
+  so: {
+    appName: "Nidaamka Canshuurta Ee E-Tax Somaliland",
+    appSubtitle: "Nidaamka Rasmiga ah ee Bixinta Canshuurta Dijitaalka ah",
+    welcomeTitle: "Ku soo dhawoow E-Tax Somaliland",
+    welcomeDescription:
+      "Isdiiwaangeli, maamul waajibaadkaaga canshuuraha, samee lacag-bixin dijitaal ah oo hel rasiidkaaga rasmiga ah ee elektaroonigga ah.",
+    login: "Gal",
+    createAccount: "Samee Akoon",
+    verifyReceipt: "Xaqiiji Rasiidka",
+    adminLogin: "Gelitaanka Maamulaha",
+    logout: "Ka bax",
+    dashboard: "Guddiga",
+    myTaxes: "Canshuurahayga",
+    payments: "Lacag-bixinnada",
+    receipts: "Rasiidhada",
+    profile: "Astaanta",
+    settings: "Dejinta",
+    language: "Luqadda",
+    notifications: "Ogeysiisyada",
+    security: "Amniga",
+    about: "Ku saabsan",
+    privacy: "Sirta",
+    terms: "Shuruudaha",
+    payTax: "Bixi Canshuur",
+    paymentHistory: "Taariikhda Lacag-bixinta",
+  },
+};

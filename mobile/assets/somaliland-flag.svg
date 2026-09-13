@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 200" width="300" height="200">
+  <rect x="0" y="0" width="300" height="66.66" fill="#0B6E4F"/>
+  <rect x="0" y="66.66" width="300" height="66.66" fill="#FFFFFF"/>
+  <rect x="0" y="133.33" width="300" height="66.67" fill="#C8102E"/>
+  <polygon points="150,80 158,103 183,103 163,118 171,141 150,127 129,141 137,118 117,103 142,103"
+    fill="#000000"/>
+  <text x="150" y="160" font-size="12" text-anchor="middle" fill="#000000" font-family="serif">
+    la ilaha illa Allah, Muhammad rasul Allah
+  </text>
+</svg>
