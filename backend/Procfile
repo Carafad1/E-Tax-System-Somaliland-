@@ -1,1 +1,1 @@
-web: FLASK_SKIP_DB_INIT=1 flask db upgrade && gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --threads 4 --worker-class gthread --timeout 60
+web: FLASK_SKIP_DB_INIT=1 flask db upgrade && gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --timeout 60
